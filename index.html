@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Game</title>
+    <title>Quiz Mini App</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,14 +13,14 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            background-color: #f0f0f0;
+            transition: background-color 0.3s, color 0.3s;
         }
         #quiz-container {
             text-align: center;
-            background: white;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
         }
         #question {
             font-size: 1.5em;
@@ -35,13 +35,9 @@
             padding: 10px;
             font-size: 1em;
             cursor: pointer;
-            background-color: #007bff;
-            color: white;
             border: none;
             border-radius: 5px;
-        }
-        button:hover {
-            background-color: #0056b3;
+            transition: background-color 0.3s;
         }
         #timer {
             margin-top: 20px;
@@ -62,6 +58,23 @@
         <div id="result"></div>
     </div>
     <script>
+        // Инициализация Telegram Web App
+        if (window.Telegram && window.Telegram.WebApp) {
+            Telegram.WebApp.ready();
+            Telegram.WebApp.expand();
+
+            // Синхронизация с темой Telegram
+            const theme = Telegram.WebApp.themeParams;
+            document.body.style.backgroundColor = theme.bg_color || '#f0f0f0';
+            document.body.style.color = theme.text_color || '#000000';
+            document.querySelector('#quiz-container').style.backgroundColor = theme.secondary_bg_color || '#ffffff';
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.style.backgroundColor = theme.button_color || '#007bff';
+                button.style.color = theme.button_text_color || '#ffffff';
+            });
+        }
+
         const questions = [
             {
                 question: "Какой язык программирования был создан первым?",
@@ -73,6 +86,7 @@
                 options: ["Java Virtual Machine", "JavaScript Virtual Machine", "Just Virtual Machine", "Java Version Manager"],
                 correctAnswer: "Java Virtual Machine"
             }
+            // Добавьте больше вопросов
         ];
 
         let currentQuestionIndex = 0;
@@ -89,7 +103,8 @@
             document.getElementById('question').textContent = `Вопрос ${currentQuestionIndex + 1}: ${question.question}`;
             const optionsDiv = document.getElementById('options');
             optionsDiv.innerHTML = '';
-            question.options.forEach(option => {
+            const shuffledOptions = [...question.options].sort(() => Math.random() - 0.5); 
+            shuffledOptions.forEach(option => {
                 const button = document.createElement('button');
                 button.textContent = option;
                 button.onclick = () => checkAnswer(option);
@@ -141,7 +156,8 @@
             document.getElementById('timer').textContent = '';
             document.getElementById('result').textContent = `Ваш итоговый счёт: ${score}`;
             if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.sendData(JSON.stringify({ score }));
+                Telegram.WebApp.sendData(JSON.stringify({ score }));
+                Telegram.WebApp.close(); // Закрываем Mini App после отправки результатов
             }
         }
 

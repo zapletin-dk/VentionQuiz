@@ -111,31 +111,33 @@
         const quizScreen = document.getElementById('quiz-screen');
         welcomeScreen.classList.add('active');
 
-        const questions = [
-            {
-                question: "Какой язык программирования был создан первым?",
-                options: ["Java", "C", "Python", "JavaScript"],
-                correctAnswer: "C"
-            },
-            {
-                question: "Что такое JVM?",
-                options: ["Java Virtual Machine", "JavaScript Virtual Machine", "Just Virtual Machine", "Java Version Manager"],
-                correctAnswer: "Java Virtual Machine"
-            }
-        ];
-
+        let questions = [];
         let currentQuestionIndex = 0;
         let score = 0;
         let timeLeft = 15;
         let timer;
 
-        document.getElementById('start-button').addEventListener('click', startQuiz);
+        // Загрузка вопросов с сервера
+        async function loadQuestions() {
+            try {
+                const response = await fetch('questions.json');
+                if (!response.ok) throw new Error('Не удалось загрузить вопросы');
+                questions = await response.json();
+            } catch (error) {
+                console.error('Ошибка при загрузке вопросов:', error);
+                // При ошибке загрузки используем заглушку
+                questions = [
+                    { question: "Ошибка загрузки", options: ["Попробуйте позже", "", "", ""], correctAnswer: "Попробуйте позже" }
+                ];
+            }
+        }
 
-        function startQuiz() {
+        document.getElementById('start-button').addEventListener('click', async () => {
+            await loadQuestions();
             welcomeScreen.classList.remove('active');
             quizScreen.classList.add('active');
             showQuestion();
-        }
+        });
 
         function showQuestion() {
             const question = questions[currentQuestionIndex];

@@ -13,13 +13,15 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            transition: background-color 0.3s, color 0.3s;
+            background-color: #f0f0f0;
+            color: #000000; 
         }
         #quiz-container {
             text-align: center;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff; 
             max-width: 90%;
         }
         #question {
@@ -37,12 +39,17 @@
             cursor: pointer;
             border: none;
             border-radius: 5px;
+            background-color: #007bff; 
+            color: #ffffff; /* Белый текст кнопок */
             transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
         }
         #timer {
             margin-top: 20px;
             font-size: 1.2em;
-            color: red;
+            color: #ff0000; 
         }
         #result {
             margin-top: 20px;
@@ -58,21 +65,20 @@
         <div id="result"></div>
     </div>
     <script>
-        // Инициализация Telegram Web App
+
         if (window.Telegram && window.Telegram.WebApp) {
             Telegram.WebApp.ready();
             Telegram.WebApp.expand();
-
-            // Синхронизация с темой Telegram
-            const theme = Telegram.WebApp.themeParams;
-            document.body.style.backgroundColor = theme.bg_color || '#f0f0f0';
-            document.body.style.color = theme.text_color || '#000000';
-            document.querySelector('#quiz-container').style.backgroundColor = theme.secondary_bg_color || '#ffffff';
-            const buttons = document.querySelectorAll('button');
-            buttons.forEach(button => {
-                button.style.backgroundColor = theme.button_color || '#007bff';
-                button.style.color = theme.button_text_color || '#ffffff';
-            });
+        } else {
+            // Эмуляция для локальной отладки
+            window.Telegram = {
+                WebApp: {
+                    ready: () => console.log('WebApp ready'),
+                    expand: () => {},
+                    sendData: (data) => console.log('Data sent:', data),
+                    close: () => console.log('WebApp closed')
+                }
+            };
         }
 
         const questions = [
@@ -86,7 +92,6 @@
                 options: ["Java Virtual Machine", "JavaScript Virtual Machine", "Just Virtual Machine", "Java Version Manager"],
                 correctAnswer: "Java Virtual Machine"
             }
-            // Добавьте больше вопросов
         ];
 
         let currentQuestionIndex = 0;
@@ -103,7 +108,7 @@
             document.getElementById('question').textContent = `Вопрос ${currentQuestionIndex + 1}: ${question.question}`;
             const optionsDiv = document.getElementById('options');
             optionsDiv.innerHTML = '';
-            const shuffledOptions = [...question.options].sort(() => Math.random() - 0.5); 
+            const shuffledOptions = [...question.options].sort(() => Math.random() - 0.5);
             shuffledOptions.forEach(option => {
                 const button = document.createElement('button');
                 button.textContent = option;
@@ -157,10 +162,9 @@
             document.getElementById('result').textContent = `Ваш итоговый счёт: ${score}`;
             if (window.Telegram && window.Telegram.WebApp) {
                 Telegram.WebApp.sendData(JSON.stringify({ score }));
-                Telegram.WebApp.close(); // Закрываем Mini App после отправки результатов
+                Telegram.WebApp.close();
             }
         }
-
         startQuiz();
     </script>
 </body>

@@ -120,7 +120,7 @@
         // Загрузка вопросов с сервера
         async function loadQuestions() {
             try {
-                const response = await fetch('resources/questions/questions_06_09_2025.json');
+                const response = await fetch('questions/questions_06_09_2025.json');
                 if (!response.ok) throw new Error('Не удалось загрузить вопросы');
                 questions = await response.json();
             } catch (error) {

@@ -47,10 +47,15 @@
             border-radius: 5px;
             background-color: #007bff;
             color: #ffffff;
-            transition: background-color 0.3s;
+            transition: all 0.2s ease;
+            transform: scale(1);
         }
-        button:hover {
+        button:hover:not(:disabled) {
             background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        button:active:not(:disabled) {
+            transform: scale(0.98);
         }
         button:disabled {
             background-color: #cccccc;
@@ -128,10 +133,10 @@
         let score = 0;
         let timeLeft = 15;
         let timer;
-        
+
         async function loadQuestions() {
             try {
-                const response = await fetch('questions_06_09_2025.json');
+                const response = await fetch('questions.json');
                 if (!response.ok) throw new Error(`Ошибка загрузки: ${response.status} ${response.statusText}`);
                 questions = await response.json();
                 if (questions.length === 0) throw new Error('Файл вопросов пуст');

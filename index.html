@@ -52,6 +52,10 @@
         button:hover {
             background-color: #0056b3;
         }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
         #timer {
             margin-top: 20px;
             font-size: 1.2em;
@@ -70,6 +74,10 @@
             margin: 10px 0;
             font-size: 1em;
         }
+        #error-message {
+            color: #ff0000;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -84,6 +92,7 @@
                 <p>4. После завершения узнайте свой счёт!</p>
             </div>
             <button id="start-button">Начать квиз</button>
+            <div id="error-message"></div>
         </div>
         <div id="quiz-screen">
             <div id="question"></div>
@@ -109,6 +118,7 @@
 
         const welcomeScreen = document.getElementById('welcome-screen');
         const quizScreen = document.getElementById('quiz-screen');
+        const errorMessage = document.getElementById('error-message');
         welcomeScreen.classList.add('active');
 
         let questions = [];
@@ -116,16 +126,17 @@
         let score = 0;
         let timeLeft = 15;
         let timer;
-
-        // Загрузка вопросов с сервера
+        
         async function loadQuestions() {
             try {
                 const response = await fetch('questions_06_09_2025.json');
-                if (!response.ok) throw new Error('Не удалось загрузить вопросы');
+                if (!response.ok) throw new Error(`Ошибка загрузки: ${response.status} ${response.statusText}`);
                 questions = await response.json();
+                if (questions.length === 0) throw new Error('Файл вопросов пуст');
             } catch (error) {
                 console.error('Ошибка при загрузке вопросов:', error);
-                // При ошибке загрузки используем заглушку
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = `Ошибка: ${error.message}. Проверьте подключение или файл questions.json.`;
                 questions = [
                     { question: "Ошибка загрузки", options: ["Попробуйте позже", "", "", ""], correctAnswer: "Попробуйте позже" }
                 ];
@@ -134,9 +145,11 @@
 
         document.getElementById('start-button').addEventListener('click', async () => {
             await loadQuestions();
-            welcomeScreen.classList.remove('active');
-            quizScreen.classList.add('active');
-            showQuestion();
+            if (questions.length > 0) {
+                welcomeScreen.classList.remove('active');
+                quizScreen.classList.add('active');
+                showQuestion();
+            }
         });
 
         function showQuestion() {
@@ -164,12 +177,21 @@
                 document.getElementById('timer').textContent = `Осталось: ${timeLeft} секунд`;
                 if (timeLeft <= 0) {
                     clearInterval(timer);
+                    disableOptions();
                     checkAnswer(null);
                 }
             }, 1000);
         }
 
+        function disableOptions() {
+            const buttons = document.getElementById('options').getElementsByTagName('button');
+            for (let button of buttons) {
+                button.disabled = true;
+            }
+        }
+
         function checkAnswer(selected) {
+            disableOptions(); // Отключаем все кнопки после первого нажатия
             clearInterval(timer);
             const question = questions[currentQuestionIndex];
             const resultDiv = document.getElementById('result');

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Mini App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            color: #000000;
+        }
+        #quiz-container {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+            max-width: 90%;
+        }
+        #welcome-screen, #quiz-screen {
+            display: none;
+        }
+        #welcome-screen.active, #quiz-screen.active {
+            display: block;
+        }
+        #question {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        #options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        button {
+            padding: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #ffffff;
+            transition: all 0.2s ease;
+            transform: scale(1);
+        }
+        button:hover:not(:disabled) {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        button:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+            transform: scale(0.98);
+        }
+        #timer {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #ff0000;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        #start-button {
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 1.2em;
+        }
+        .steps {
+            margin: 10px 0;
+            font-size: 1em;
+        }
+        #error-message {
+            color: #ff0000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div id="quiz-container">
+    <div id="welcome-screen">
+        <h2>Добро пожаловать в Квиз!</h2>
+        <p>Тест вашего знания с таймером и счётом.</p>
+        <div class="steps">
+            <p>1. Нажмите "Начать квиз" для старта.</p>
+            <p>2. Отвечайте на вопросы, выбирая один из четырёх вариантов.</p>
+            <p>3. У вас есть 15 секунд на каждый вопрос.</p>
+            <p>4. После завершения узнайте свой счёт!</p>
+        </div>
+        <button id="start-button">Начать квиз</button>
+        <div id="error-message"></div>
+    </div>
+    <div id="quiz-screen">
+        <div id="question"></div>
+        <div id="options"></div>
+        <div id="timer">Осталось: 15 секунд</div>
+        <div id="result"></div>
+    </div>
+</div>
+<script>
+    if (window.Telegram && window.Telegram.WebApp) {
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+    } else {
+        window.Telegram = {
+            WebApp: {
+                ready: () => console.log('WebApp ready'),
+                expand: () => {},
+                sendData: (data) => console.log('Data sent:', data),
+                close: () => console.log('WebApp closed')
+            }
+        };
+    }
+
+    const welcomeScreen = document.getElementById('welcome-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const errorMessage = document.getElementById('error-message');
+    welcomeScreen.classList.add('active');
+
+    let questions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let timeLeft = 15;
+    let timer;
+
+    async function loadQuestions() {
+        try {
+            const response = await fetch('questions_06_09_2025.json');
+            if (!response.ok) throw new Error(`Ошибка загрузки: ${response.status} ${response.statusText}`);
+            questions = await response.json();
+            if (questions.length === 0) throw new Error('Файл вопросов пуст');
+        } catch (error) {
+            console.error('Ошибка при загрузке вопросов:', error);
+            errorMessage.style.display = 'block';
+            errorMessage.textContent = `Ошибка: ${error.message}. Проверьте подключение или файл questions.json.`;
+            questions = [
+                { question: "Ошибка загрузки", options: ["Попробуйте позже", "", "", ""], correctAnswer: "Попробуйте позже" }
+            ];
+        }
+    }
+
+    document.getElementById('start-button').addEventListener('click', async () => {
+        await loadQuestions();
+        if (questions.length > 0) {
+            welcomeScreen.classList.remove('active');
+            quizScreen.classList.add('active');
+            showQuestion();
+        }
+    });
+
+    function showQuestion() {
+        const question = questions[currentQuestionIndex];
+        document.getElementById('question').textContent = `Вопрос ${currentQuestionIndex + 1}: ${question.question}`;
+        const optionsDiv = document.getElementById('options');
+        optionsDiv.innerHTML = '';
+        const shuffledOptions = [...question.options].sort(() => Math.random() - 0.5);
+        shuffledOptions.forEach(option => {
+            const button = document.createElement('button');
+            button.textContent = option;
+            button.onclick = () => checkAnswer(option);
+            optionsDiv.appendChild(button);
+        });
+        document.getElementById('result').textContent = '';
+        timeLeft = 15;
+        document.getElementById('timer').textContent = `Осталось: ${timeLeft} секунд`;
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timer);
+        timer = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer').textContent = `Осталось: ${timeLeft} секунд`;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                disableOptions();
+                checkAnswer(null);
+            }
+        }, 1000);
+    }
+
+    function disableOptions() {
+        const buttons = document.getElementById('options').getElementsByTagName('button');
+        for (let button of buttons) {
+            button.disabled = true;
+        }
+    }
+
+    function checkAnswer(selected) {
+        disableOptions(); // Отключаем все кнопки после первого нажатия
+        clearInterval(timer);
+        const question = questions[currentQuestionIndex];
+        const resultDiv = document.getElementById('result');
+        if (selected && selected === question.correctAnswer) {
+            score++;
+            resultDiv.textContent = `Правильно! Текущий счёт: ${score}`;
+        } else if (selected) {
+            resultDiv.textContent = `Неправильно. Правильный ответ: ${question.correctAnswer}`;
+        } else {
+            resultDiv.textContent = `Время вышло! Правильный ответ: ${question.correctAnswer}`;
+        }
+        setTimeout(() => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                endQuiz();
+            }
+        }, 2000);
+    }
+
+    function endQuiz() {
+        document.getElementById('question').textContent = 'Квиз завершён!';
+        document.getElementById('options').innerHTML = '';
+        document.getElementById('timer').textContent = '';
+        document.getElementById('result').textContent = `Ваш итоговый счёт: ${score}`;
+        if (window.Telegram && window.Telegram.WebApp) {
+            Telegram.WebApp.sendData(JSON.stringify({ score }));
+            Telegram.WebApp.close();
+        }
+    }
+</script>
+</body>
+</html>

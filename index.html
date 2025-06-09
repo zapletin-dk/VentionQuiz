@@ -14,15 +14,21 @@
             height: 100vh;
             margin: 0;
             background-color: #f0f0f0;
-            color: #000000; 
+            color: #000000;
         }
         #quiz-container {
             text-align: center;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            background-color: #ffffff; 
+            background-color: #ffffff;
             max-width: 90%;
+        }
+        #welcome-screen, #quiz-screen {
+            display: none;
+        }
+        #welcome-screen.active, #quiz-screen.active {
+            display: block;
         }
         #question {
             font-size: 1.5em;
@@ -39,8 +45,8 @@
             cursor: pointer;
             border: none;
             border-radius: 5px;
-            background-color: #007bff; 
-            color: #ffffff; /* Белый текст кнопок */
+            background-color: #007bff;
+            color: #ffffff;
             transition: background-color 0.3s;
         }
         button:hover {
@@ -49,28 +55,48 @@
         #timer {
             margin-top: 20px;
             font-size: 1.2em;
-            color: #ff0000; 
+            color: #ff0000;
         }
         #result {
             margin-top: 20px;
             font-size: 1.2em;
         }
+        #start-button {
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 1.2em;
+        }
+        .steps {
+            margin: 10px 0;
+            font-size: 1em;
+        }
     </style>
 </head>
 <body>
     <div id="quiz-container">
-        <div id="question"></div>
-        <div id="options"></div>
-        <div id="timer">Осталось: 15 секунд</div>
-        <div id="result"></div>
+        <div id="welcome-screen">
+            <h2>Добро пожаловать в Квиз!</h2>
+            <p>Тест вашего знания с таймером и счётом.</p>
+            <div class="steps">
+                <p>1. Нажмите "Начать квиз" для старта.</p>
+                <p>2. Отвечайте на вопросы, выбирая один из четырёх вариантов.</p>
+                <p>3. У вас есть 15 секунд на каждый вопрос.</p>
+                <p>4. После завершения узнайте свой счёт!</p>
+            </div>
+            <button id="start-button">Начать квиз</button>
+        </div>
+        <div id="quiz-screen">
+            <div id="question"></div>
+            <div id="options"></div>
+            <div id="timer">Осталось: 15 секунд</div>
+            <div id="result"></div>
+        </div>
     </div>
     <script>
-
         if (window.Telegram && window.Telegram.WebApp) {
             Telegram.WebApp.ready();
             Telegram.WebApp.expand();
         } else {
-            // Эмуляция для локальной отладки
             window.Telegram = {
                 WebApp: {
                     ready: () => console.log('WebApp ready'),
@@ -80,6 +106,10 @@
                 }
             };
         }
+
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        welcomeScreen.classList.add('active');
 
         const questions = [
             {
@@ -99,7 +129,11 @@
         let timeLeft = 15;
         let timer;
 
+        document.getElementById('start-button').addEventListener('click', startQuiz);
+
         function startQuiz() {
+            welcomeScreen.classList.remove('active');
+            quizScreen.classList.add('active');
             showQuestion();
         }
 
@@ -165,7 +199,6 @@
                 Telegram.WebApp.close();
             }
         }
-        startQuiz();
     </script>
 </body>
 </html>

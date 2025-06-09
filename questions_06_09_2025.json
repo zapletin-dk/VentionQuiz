@@ -1,0 +1,52 @@
+[
+  {
+    "question": "Какой язык программирования был создан первым?",
+    "options": ["Java", "C", "Python", "JavaScript"],
+    "correctAnswer": "C"
+  },
+  {
+    "question": "Что такое JVM?",
+    "options": ["Java Virtual Machine", "JavaScript Virtual Machine", "Just Virtual Machine", "Java Version Manager"],
+    "correctAnswer": "Java Virtual Machine"
+  },
+  {
+    "question": "Какой HTTP-статус указывает на успешный запрос?",
+    "options": ["404", "200", "500", "302"],
+    "correctAnswer": "200"
+  },
+  {
+    "question": "Какой метод REST API используется для создания ресурса?",
+    "options": ["GET", "POST", "PUT", "DELETE"],
+    "correctAnswer": "POST"
+  },
+  {
+    "question": "Что такое SQL?",
+    "options": ["Structured Query Language", "Simple Query Language", "System Query Language", "Sequential Query Language"],
+    "correctAnswer": "Structured Query Language"
+  },
+  {
+    "question": "Какой порт по умолчанию используется для HTTP?",
+    "options": ["80", "443", "8080", "21"],
+    "correctAnswer": "80"
+  },
+  {
+    "question": "Что возвращает оператор SELECT в SQL?",
+    "options": ["Обновляет данные", "Удаляет данные", "Извлекает данные", "Создаёт таблицу"],
+    "correctAnswer": "Извлекает данные"
+  },
+  {
+    "question": "Какой язык разметки используется для веб-страниц?",
+    "options": ["CSS", "HTML", "JavaScript", "Python"],
+    "correctAnswer": "HTML"
+  },
+  {
+    "question": "Что такое идемпотентность в HTTP?",
+    "options": ["Повторяемость без побочных эффектов", "Один запрос на сервер", "Случайный результат", "Только POST-запросы"],
+    "correctAnswer": "Повторяемость без побочных эффектов"
+  },
+  {
+    "question": "Какой инструмент часто используется для автоматизации тестов?",
+    "options": ["Selenium", "Notepad", "Paint", "Excel"],
+    "correctAnswer": "Selenium"
+  }
+]

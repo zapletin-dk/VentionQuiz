@@ -133,6 +133,7 @@
         let score = 0;
         let timeLeft = 15;
         let timer;
+        let userAnswers = []; // Для хранения ответов пользователя
 
         async function loadQuestions() {
             try {
@@ -185,7 +186,7 @@
                 if (timeLeft <= 0) {
                     clearInterval(timer);
                     disableOptions();
-                    checkAnswer(null);
+                    checkAnswer(null); // Автоматически завершить, если время вышло
                 }
             }, 1000);
         }
@@ -202,6 +203,7 @@
             clearInterval(timer);
             const question = questions[currentQuestionIndex];
             const resultDiv = document.getElementById('result');
+            userAnswers[currentQuestionIndex] = selected || "NoAnswer"; // Сохраняем ответ
             if (selected && selected === question.correctAnswer) {
                 score++;
                 resultDiv.textContent = `Правильно! Текущий счёт: ${score}`;
@@ -226,7 +228,9 @@
             document.getElementById('timer').textContent = '';
             document.getElementById('result').textContent = `Ваш итоговый счёт: ${score}`;
             if (window.Telegram && window.Telegram.WebApp) {
-                Telegram.WebApp.sendData(JSON.stringify({ score }));
+                const answers = userAnswers.map((answer, index) => `${index}:${answer}`).join(',');
+                const data = { score: score.toString(), answers: `[${answers}]` };
+                Telegram.WebApp.sendData(JSON.stringify(data));
                 Telegram.WebApp.close();
             }
         }

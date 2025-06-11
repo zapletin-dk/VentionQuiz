@@ -240,7 +240,7 @@
         }, 2000);
     }
 
-    function endQuiz() {
+   function endQuiz() {
         document.getElementById('question').textContent = 'Квиз завершён!';
         document.getElementById('options').innerHTML = '';
         document.getElementById('timer').textContent = '';
@@ -262,8 +262,14 @@
                 score: score.toString(),
                 result: wrongAnswersReport || "Вы ответили правильно на все вопросы!"
             };
+            // Улучшенный вывод в alert с увеличенным размером и форматированием
+            const formattedData = `=== Quiz Data ===\n` +
+                                 `Score: ${data.score}\n` +
+                                 `Result:\n${data.result.replace(/\n/g, '\n  ')}\n` +
+                                 `=== End of Data ===`;
+            alert(formattedData); // Увеличенный и отформатированный вывод
             Telegram.WebApp.sendData(JSON.stringify(data));
-            setTimeout(() => Telegram.WebApp.close(), 1000); 
+            setTimeout(() => Telegram.WebApp.close(), 1000); // Задержка для отправки
         } else {
             console.log('Quiz ended, sending data:', {
                 score: score.toString(),

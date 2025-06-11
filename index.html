@@ -252,7 +252,7 @@
             Telegram.WebApp.sendData(JSON.stringify({ type: 'confirm', message: 'Quiz data sent', data: data }));
             setTimeout(() => Telegram.WebApp.close(), 1000);
         } else {
-            console.log('Quiz ended, sending data:', { score: score.toString(), answers: `[${userAnswers.map((a, i) => `${i}:${a}`).join(',')}]` });
+            console.log('Quiz ended e, sending data:', { score: score.toString(), answers: `[${userAnswers.map((a, i) => `${i}:${a}`).join(',')}]` });
         }
     }
 </script>

@@ -138,7 +138,7 @@
 
     async function loadQuestions() {
         try {
-            const response = await fetch('questions_test.json');
+            const response = await fetch('questions.json');
             if (!response.ok) throw new Error(`Ошибка загрузки: ${response.status} ${response.statusText}`);
             questions = await response.json();
             if (questions.length === 0) throw new Error('Файл вопросов пуст');

@@ -133,7 +133,7 @@
         let score = 0;
         let timeLeft = 15;
         let timer;
-        let userAnswers = []; // Для хранения ответов пользователя
+        let userAnswers = [];
 
         async function loadQuestions() {
             try {
@@ -141,12 +141,13 @@
                 if (!response.ok) throw new Error(`Ошибка загрузки: ${response.status} ${response.statusText}`);
                 questions = await response.json();
                 if (questions.length === 0) throw new Error('Файл вопросов пуст');
+                console.log('Loaded questions:', questions); 
             } catch (error) {
                 console.error('Ошибка при загрузке вопросов:', error);
                 errorMessage.style.display = 'block';
                 errorMessage.textContent = `Ошибка: ${error.message}. Проверьте подключение или файл questions.json.`;
                 questions = [
-                    { question: "Ошибка загрузки", options: ["Попробуйте позже", "", "", ""], correctAnswer: "Попробуйте позже" }
+                    { question: "Ошибка загрузки", options: ["Попробуйте позже", "", "", ""], correctAnswer: "Попробуйте позже", theorySnippet: "Проверьте подключение или файл." }
                 ];
             }
         }
@@ -186,7 +187,7 @@
                 if (timeLeft <= 0) {
                     clearInterval(timer);
                     disableOptions();
-                    checkAnswer(null); // Автоматически завершить, если время вышло
+                    checkAnswer(null); 
                 }
             }, 1000);
         }
@@ -199,18 +200,18 @@
         }
 
         function checkAnswer(selected) {
-            disableOptions(); // Отключаем все кнопки после первого нажатия
+            disableOptions(); 
             clearInterval(timer);
             const question = questions[currentQuestionIndex];
             const resultDiv = document.getElementById('result');
-            userAnswers[currentQuestionIndex] = selected || "NoAnswer"; // Сохраняем ответ
+            userAnswers[currentQuestionIndex] = selected || "NoAnswer"; 
             if (selected && selected === question.correctAnswer) {
                 score++;
                 resultDiv.textContent = `Правильно! Текущий счёт: ${score}`;
             } else if (selected) {
-                resultDiv.textContent = `Неправильно. Правильный ответ: ${question.correctAnswer}`;
+                resultDiv.textContent = `Неправильно. Правильный ответ: ${question.correctAnswer}\nПояснение: ${question.theorySnippet || 'Нет пояснения'}`;
             } else {
-                resultDiv.textContent = `Время вышло! Правильный ответ: ${question.correctAnswer}`;
+                resultDiv.textContent = `Время вышло! Правильный ответ: ${question.correctAnswer}\nПояснение: ${question.theorySnippet || 'Нет пояснения'}`;
             }
             setTimeout(() => {
                 currentQuestionIndex++;
@@ -230,6 +231,7 @@
             if (window.Telegram && window.Telegram.WebApp) {
                 const answers = userAnswers.map((answer, index) => `${index}:${answer}`).join(',');
                 const data = { score: score.toString(), answers: `[${answers}]` };
+                console.log('Sending data:', data); // Для отладки
                 Telegram.WebApp.sendData(JSON.stringify(data));
                 Telegram.WebApp.close();
             }

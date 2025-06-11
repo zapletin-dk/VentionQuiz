@@ -88,154 +88,171 @@
     </style>
 </head>
 <body>
-    <div id="quiz-container">
-        <div id="welcome-screen">
-            <h2>Добро пожаловать в Квиз!</h2>
-            <p>Тест вашего знания с таймером и счётом.</p>
-            <div class="steps">
-                <p>1. Нажмите "Начать квиз" для старта.</p>
-                <p>2. Отвечайте на вопросы, выбирая один из четырёх вариантов.</p>
-                <p>3. У вас есть 15 секунд на каждый вопрос.</p>
-                <p>4. После завершения узнайте свой счёт!</p>
-            </div>
-            <button id="start-button">Начать квиз</button>
-            <div id="error-message"></div>
+<div id="quiz-container">
+    <div id="welcome-screen">
+        <h2>Добро пожаловать в Квиз!</h2>
+        <p>Тест вашего знания с таймером и счётом.</p>
+        <div class="steps">
+            <p>1. Нажмите "Начать квиз" для старта.</p>
+            <p>2. Отвечайте на вопросы, выбирая один из четырёх вариантов.</p>
+            <p>3. У вас есть 15 секунд на каждый вопрос.</p>
+            <p>4. После завершения узнайте свой счёт!</p>
         </div>
-        <div id="quiz-screen">
-            <div id="question"></div>
-            <div id="options"></div>
-            <div id="timer">Осталось: 15 секунд</div>
-            <div id="result"></div>
-        </div>
+        <button id="start-button">Начать квиз</button>
+        <div id="error-message"></div>
     </div>
-    <script>
-        if (window.Telegram && window.Telegram.WebApp) {
-            Telegram.WebApp.ready();
-            Telegram.WebApp.expand();
-        } else {
-            window.Telegram = {
-                WebApp: {
-                    ready: () => console.log('WebApp ready'),
-                    expand: () => {},
-                    sendData: (data) => console.log('Data sent:', data),
-                    close: () => console.log('WebApp closed')
-                }
-            };
-        }
-
-        const welcomeScreen = document.getElementById('welcome-screen');
-        const quizScreen = document.getElementById('quiz-screen');
-        const errorMessage = document.getElementById('error-message');
-        welcomeScreen.classList.add('active');
-
-        let questions = [];
-        let currentQuestionIndex = 0;
-        let score = 0;
-        let timeLeft = 15;
-        let timer;
-        let userAnswers = [];
-
-        async function loadQuestions() {
-            try {
-                const response = await fetch('questions.json');
-                if (!response.ok) throw new Error(`Ошибка загрузки: ${response.status} ${response.statusText}`);
-                questions = await response.json();
-                if (questions.length === 0) throw new Error('Файл вопросов пуст');
-                console.log('Loaded questions:', questions); 
-            } catch (error) {
-                console.error('Ошибка при загрузке вопросов:', error);
-                errorMessage.style.display = 'block';
-                errorMessage.textContent = `Ошибка: ${error.message}. Проверьте подключение или файл questions.json.`;
-                questions = [
-                    { question: "Ошибка загрузки", options: ["Попробуйте позже", "", "", ""], correctAnswer: "Попробуйте позже", theorySnippet: "Проверьте подключение или файл." }
-                ];
+    <div id="quiz-screen">
+        <div id="question"></div>
+        <div id="options"></div>
+        <div id="timer">Осталось: 15 секунд</div>
+        <div id="result"></div>
+    </div>
+</div>
+<script>
+    if (window.Telegram && window.Telegram.WebApp) {
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+    } else {
+        window.Telegram = {
+            WebApp: {
+                ready: () => console.log('WebApp ready'),
+                expand: () => {},
+                sendData: (data) => console.log('Data sent:', data),
+                close: () => console.log('WebApp closed')
             }
-        }
+        };
+    }
 
-        document.getElementById('start-button').addEventListener('click', async () => {
-            await loadQuestions();
-            if (questions.length > 0) {
-                welcomeScreen.classList.remove('active');
-                quizScreen.classList.add('active');
-                showQuestion();
-            }
-        });
+    const welcomeScreen = document.getElementById('welcome-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const errorMessage = document.getElementById('error-message');
+    welcomeScreen.classList.add('active');
 
-        function showQuestion() {
-            const question = questions[currentQuestionIndex];
-            document.getElementById('question').textContent = `Вопрос ${currentQuestionIndex + 1}: ${question.question}`;
-            const optionsDiv = document.getElementById('options');
-            optionsDiv.innerHTML = '';
-            const shuffledOptions = [...question.options].sort(() => Math.random() - 0.5);
-            shuffledOptions.forEach(option => {
-                const button = document.createElement('button');
-                button.textContent = option;
-                button.onclick = () => checkAnswer(option);
-                optionsDiv.appendChild(button);
-            });
-            document.getElementById('result').textContent = '';
-            timeLeft = 15;
-            document.getElementById('timer').textContent = `Осталось: ${timeLeft} секунд`;
-            startTimer();
-        }
+    let questions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let timeLeft = 15;
+    let timer;
+    let userAnswers = [];
 
-        function startTimer() {
-            clearInterval(timer);
-            timer = setInterval(() => {
-                timeLeft--;
-                document.getElementById('timer').textContent = `Осталось: ${timeLeft} секунд`;
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    disableOptions();
-                    checkAnswer(null); 
-                }
-            }, 1000);
-        }
-
-        function disableOptions() {
-            const buttons = document.getElementById('options').getElementsByTagName('button');
-            for (let button of buttons) {
-                button.disabled = true;
-            }
-        }
-
-        function checkAnswer(selected) {
-            disableOptions(); 
-            clearInterval(timer);
-            const question = questions[currentQuestionIndex];
-            const resultDiv = document.getElementById('result');
-            userAnswers[currentQuestionIndex] = selected || "NoAnswer"; 
-            if (selected && selected === question.correctAnswer) {
-                score++;
-                resultDiv.textContent = `Правильно! Текущий счёт: ${score}`;
-            } else if (selected) {
-                resultDiv.textContent = `Неправильно. Правильный ответ: ${question.correctAnswer}\nПояснение: ${question.theorySnippet || 'Нет пояснения'}`;
+    async function loadQuestions() {
+        try {
+            const response = await fetch('questions_test.json');
+            if (!response.ok) throw new Error(`Ошибка загрузки: ${response.status} ${response.statusText}`);
+            questions = await response.json();
+            if (questions.length === 0) throw new Error('Файл вопросов пуст');
+            if (window.Telegram && Telegram.WebApp) {
+                Telegram.WebApp.sendData(JSON.stringify({ type: 'debug', message: `Loaded questions: ${questions.length}` }));
             } else {
-                resultDiv.textContent = `Время вышло! Правильный ответ: ${question.correctAnswer}\nПояснение: ${question.theorySnippet || 'Нет пояснения'}`;
+                console.log('Loaded questions:', questions);
             }
-            setTimeout(() => {
-                currentQuestionIndex++;
-                if (currentQuestionIndex < questions.length) {
-                    showQuestion();
-                } else {
-                    endQuiz();
-                }
-            }, 2000);
+        } catch (error) {
+            console.error('Ошибка при загрузке вопросов:', error);
+            errorMessage.style.display = 'block';
+            errorMessage.textContent = `Ошибка: ${error.message}. Проверьте подключение или файл questions.json.`;
+            questions = [
+                { question: "Ошибка загрузки", options: ["Попробуйте позже", "", "", ""], correctAnswer: "Попробуйте позже", theorySnippet: "Проверьте подключение или файл." }
+            ];
+            if (window.Telegram && Telegram.WebApp) {
+                Telegram.WebApp.sendData(JSON.stringify({ type: 'debug', message: `Error loading questions: ${error.message}` }));
+            }
         }
+    }
 
-        function endQuiz() {
-            document.getElementById('question').textContent = 'Квиз завершён!';
-            document.getElementById('options').innerHTML = '';
-            document.getElementById('timer').textContent = '';
-            document.getElementById('result').textContent = `Ваш итоговый счёт: ${score}`;
-            if (window.Telegram && window.Telegram.WebApp) {
-                const answers = userAnswers.map((answer, index) => `${index}:${answer}`).join(',');
-                const data = { score: score.toString(), answers: `[${answers}]` };
-                console.log('Sending data:', data); // Для отладки
-                Telegram.WebApp.sendData(JSON.stringify(data));
-                Telegram.WebApp.close();
-            }
+    document.getElementById('start-button').addEventListener('click', async () => {
+        await loadQuestions();
+        if (questions.length > 0) {
+            welcomeScreen.classList.remove('active');
+            quizScreen.classList.add('active');
+            showQuestion();
         }
-    </script>
+    });
+
+    function showQuestion() {
+        const question = questions[currentQuestionIndex];
+        document.getElementById('question').textContent = `Вопрос ${currentQuestionIndex + 1}: ${question.question}`;
+        const optionsDiv = document.getElementById('options');
+        optionsDiv.innerHTML = '';
+        const shuffledOptions = [...question.options].sort(() => Math.random() - 0.5);
+        shuffledOptions.forEach(option => {
+            const button = document.createElement('button');
+            button.textContent = option;
+            button.onclick = () => checkAnswer(option);
+            optionsDiv.appendChild(button);
+        });
+        document.getElementById('result').textContent = '';
+        timeLeft = 15;
+        document.getElementById('timer').textContent = `Осталось: ${timeLeft} секунд`;
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timer);
+        timer = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer').textContent = `Осталось: ${timeLeft} секунд`;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                disableOptions();
+                checkAnswer(null);
+            }
+        }, 1000);
+    }
+
+    function disableOptions() {
+        const buttons = document.getElementById('options').getElementsByTagName('button');
+        for (let button of buttons) {
+            button.disabled = true;
+        }
+    }
+
+    function checkAnswer(selected) {
+        disableOptions();
+        clearInterval(timer);
+        const question = questions[currentQuestionIndex];
+        const resultDiv = document.getElementById('result');
+        userAnswers[currentQuestionIndex] = selected || "NoAnswer";
+        if (selected && selected === question.correctAnswer) {
+            score++;
+            resultDiv.textContent = `Правильно! Текущий счёт: ${score}`;
+        } else if (selected) {
+            resultDiv.textContent = `Неправильно. Правильный ответ: ${question.correctAnswer}\nПояснение: ${question.theorySnippet || 'Нет пояснения'}`;
+        } else {
+            resultDiv.textContent = `Время вышло! Правильный ответ: ${question.correctAnswer}\nПояснение: ${question.theorySnippet || 'Нет пояснения'}`;
+        }
+        if (window.Telegram && Telegram.WebApp) {
+            Telegram.WebApp.sendData(JSON.stringify({ type: 'debug', message: `Checked answer at index ${currentQuestionIndex}: ${selected || 'NoAnswer'}` }));
+        } else {
+            console.log(`Checked answer at index ${currentQuestionIndex}: ${selected || 'NoAnswer'}`);
+        }
+        setTimeout(() => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                endQuiz();
+            }
+        }, 2000);
+    }
+
+    function endQuiz() {
+        document.getElementById('question').textContent = 'Квиз завершён!';
+        document.getElementById('options').innerHTML = '';
+        document.getElementById('timer').textContent = '';
+        document.getElementById('result').textContent = `Ваш итоговый счёт: ${score}`;
+        if (window.Telegram && Telegram.WebApp) {
+            const answers = userAnswers.map((answer, index) => `${index}:${answer}`).join(',');
+            const data = { score: score.toString(), answers: `[${answers}]` };
+            Telegram.WebApp.sendData(JSON.stringify(data));
+        
+            setTimeout(() => {
+                Telegram.WebApp.sendData(JSON.stringify({ type: 'confirm', message: 'Quiz data sent', data: data }));
+                Telegram.WebApp.close();
+            }, 500); 
+        } else {
+            console.log('Quiz ended, sending data:', { score: score.toString(), answers: `[${userAnswers.map((a, i) => `${i}:${a}`).join(',')}]` });
+        }
+    }
+</script>
 </body>
 </html>

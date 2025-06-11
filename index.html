@@ -147,6 +147,7 @@
             } else {
                 console.log('Loaded questions:', questions);
             }
+            return true;
         } catch (error) {
             console.error('Ошибка при загрузке вопросов:', error);
             errorMessage.style.display = 'block';
@@ -157,15 +158,18 @@
             if (window.Telegram && Telegram.WebApp) {
                 Telegram.WebApp.sendData(JSON.stringify({ type: 'debug', message: `Error loading questions: ${error.message}` }));
             }
+            return false;
         }
     }
 
     document.getElementById('start-button').addEventListener('click', async () => {
-        await loadQuestions();
-        if (questions.length > 0) {
+        const loaded = await loadQuestions();
+        if (loaded && questions.length > 0) {
             welcomeScreen.classList.remove('active');
             quizScreen.classList.add('active');
             showQuestion();
+        } else {
+            alert('Не удалось загрузить вопросы. Проверьте файл questions_test.json.');
         }
     });
 
@@ -244,7 +248,7 @@
         if (window.Telegram && Telegram.WebApp) {
             const answers = userAnswers.map((answer, index) => `${index}:${answer}`).join(',');
             const data = { score: score.toString(), answers: `[${answers}]` };
-            alert('Sending data: ' + JSON.stringify(data)); // Проверка
+            alert('Sending data: ' + JSON.stringify(data)); 
             Telegram.WebApp.sendData(JSON.stringify(data));
             setTimeout(() => {
                 Telegram.WebApp.sendData(JSON.stringify({ type: 'confirm', message: 'Quiz data sent', data: data }));
